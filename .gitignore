@@ -1,0 +1,73 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Database files
+*.sqlite3
+*.db-journal
+
+# Large local raw dumps if needed (keep repository lightweight)
+# data/raw/*.zip
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+secrets/
+*credentials*
+*secret*
+*password*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Local Python environments
+.venv/
+
+# CSV datasets - review before publishing
+*.csv

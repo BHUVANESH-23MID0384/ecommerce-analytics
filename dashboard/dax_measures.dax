@@ -1,0 +1,220 @@
+/* ==============================================================================
+   dax_measures.dax
+   E-Commerce Sales, Customer & Profitability Analytics Platform
+   Production DAX Measure Library (25+ Enterprise Measures)
+   Organized by Functional Measure Table / Display Folders
+============================================================================== */
+
+-- ==============================================================================
+-- DISPLAY FOLDER: 01 - Core Financials & Volume
+-- ==============================================================================
+
+-- Measure 01: Total Revenue (Net Sales)
+[Total Revenue] = 
+SUM(fact_sales[net_sales])
+
+-- Measure 02: Total Cost
+[Total Cost] = 
+SUM(fact_sales[cost_amount])
+
+-- Measure 03: Total Profit
+[Total Profit] = 
+SUM(fact_sales[profit])
+
+-- Measure 04: Gross Profit Margin %
+[Profit Margin %] = 
+DIVIDE(
+    [Total Profit],
+    [Total Revenue],
+    0.0
+)
+
+-- Measure 05: Total Orders
+[Total Orders] = 
+DISTINCTCOUNT(fact_sales[order_id])
+
+-- Measure 06: Total Units Sold
+[Total Units Sold] = 
+SUM(fact_sales[quantity])
+
+-- Measure 07: Total Unique Customers
+[Total Customers] = 
+DISTINCTCOUNT(fact_sales[customer_id])
+
+-- Measure 08: Average Order Value (AOV)
+[Average Order Value] = 
+DIVIDE(
+    [Total Revenue],
+    [Total Orders],
+    0.0
+)
+
+-- Measure 09: Average Profit per Order
+[Profit per Order] = 
+DIVIDE(
+    [Total Profit],
+    [Total Orders],
+    0.0
+)
+
+-- ==============================================================================
+-- DISPLAY FOLDER: 02 - Time Intelligence & Growth
+-- ==============================================================================
+
+-- Measure 10: Prior Year Revenue
+[Revenue PY] = 
+CALCULATE(
+    [Total Revenue],
+    SAMEPERIODLASTYEAR('dim_date'[full_date])
+)
+
+-- Measure 11: Year-over-Year (YoY) Revenue Growth %
+[YoY Revenue Growth %] = 
+VAR _Current = [Total Revenue]
+VAR _Prior = [Revenue PY]
+RETURN
+    DIVIDE(
+        _Current - _Prior,
+        _Prior,
+        BLANK()
+    )
+
+-- Measure 12: Prior Year Profit
+[Profit PY] = 
+CALCULATE(
+    [Total Profit],
+    SAMEPERIODLASTYEAR('dim_date'[full_date])
+)
+
+-- Measure 13: YoY Profit Growth %
+[YoY Profit Growth %] = 
+VAR _Current = [Total Profit]
+VAR _Prior = [Profit PY]
+RETURN
+    DIVIDE(
+        _Current - _Prior,
+        _Prior,
+        BLANK()
+    )
+
+-- Measure 14: Month-over-Month (MoM) Revenue Growth %
+[Revenue MoM Growth %] = 
+VAR _Current = [Total Revenue]
+VAR _PriorMonth = 
+    CALCULATE(
+        [Total Revenue],
+        DATEADD('dim_date'[full_date], -1, MONTH)
+    )
+RETURN
+    DIVIDE(
+        _Current - _PriorMonth,
+        _PriorMonth,
+        BLANK()
+    )
+
+-- Measure 15: Year-to-Date (YTD) Revenue
+[Revenue YTD] = 
+CALCULATE(
+    [Total Revenue],
+    DATESYTD('dim_date'[full_date])
+)
+
+-- Measure 16: Rolling 3-Month Trailing Revenue
+[Rolling 3M Revenue] = 
+CALCULATE(
+    [Total Revenue],
+    DATESINPERIOD(
+        'dim_date'[full_date],
+        MAX('dim_date'[full_date]),
+        -3,
+        MONTH
+    )
+)
+
+-- ==============================================================================
+-- DISPLAY FOLDER: 03 - Customer Analytics & RFM
+-- ==============================================================================
+
+-- Measure 17: Repeat Customers Count (Customers with > 1 lifetime order)
+[Repeat Customers Count] = 
+COUNTROWS(
+    FILTER(
+        VALUES(fact_sales[customer_id]),
+        CALCULATE(DISTINCTCOUNT(fact_sales[order_id])) > 1
+    )
+)
+
+-- Measure 18: Repeat Customer Rate %
+[Repeat Customer Rate %] = 
+DIVIDE(
+    [Repeat Customers Count],
+    [Total Customers],
+    0.0
+)
+
+-- Measure 19: Average Customer Spend (Historical CLV)
+[Customer Lifetime Spend] = 
+DIVIDE(
+    [Total Revenue],
+    [Total Customers],
+    0.0
+)
+
+-- Measure 20: Champions Segment Revenue Share %
+[Champions Revenue Share %] = 
+VAR _ChampionsRev = 
+    CALCULATE(
+        [Total Revenue],
+        rfm_customer_segments[customer_segment_rfm] = "Champions"
+    )
+RETURN
+    DIVIDE(_ChampionsRev, [Total Revenue], 0.0)
+
+-- ==============================================================================
+-- DISPLAY FOLDER: 04 - Profitability, Pricing & Returns
+-- ==============================================================================
+
+-- Measure 21: High-Discount Revenue (Discount >= 20%)
+[High Discount Sales] = 
+CALCULATE(
+    [Total Revenue],
+    fact_sales[discount_rate] >= 0.20
+)
+
+-- Measure 22: High-Discount Sales Share %
+[High Discount Sales Share %] = 
+DIVIDE(
+    [High Discount Sales],
+    [Total Revenue],
+    0.0
+)
+
+-- Measure 23: Total Gross Discount Dollars Given
+[Total Discount Amount] = 
+SUMX(
+    fact_sales,
+    (fact_sales[unit_price] * fact_sales[quantity]) * fact_sales[discount_rate]
+)
+
+-- Measure 24: Product Return Rate %
+[Return Rate %] = 
+VAR _TotalLineItems = COUNTROWS(fact_sales)
+VAR _ReturnedItems = CALCULATE(COUNTROWS(fact_sales), fact_sales[return_flag] = 1)
+RETURN
+    DIVIDE(_ReturnedItems, _TotalLineItems, 0.0)
+
+-- Measure 25: Total Shipping Costs
+[Total Shipping Cost] = 
+SUM(fact_sales[shipping_cost])
+
+-- Measure 26: Shipping Cost to Revenue Ratio %
+[Shipping to Revenue %] = 
+DIVIDE(
+    [Total Shipping Cost],
+    [Total Revenue],
+    0.0
+)
+
+-- Measure 27: Average Delivery Days
+[Average Delivery Days] = 
+AVERAGE(fact_sales[shipping_duration_days])
