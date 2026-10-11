@@ -13,7 +13,11 @@ import numpy as np
 from flask import Flask, render_template_string, jsonify, request
 
 app = Flask(__name__)
-DB_PATH = "ecommerce.db"
+
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..")
+)
+DB_PATH = os.path.join(BASE_DIR, "ecommerce.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
